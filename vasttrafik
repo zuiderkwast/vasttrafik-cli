@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+
+# Author: Viktor Söderqvist, 2019
+# Copying: See the LICENSE file
+
+use strict;
+use warnings;
+use Encode 'encode';
+
+my $stop = shift;
+
+my $headings = 0;
+if (defined $stop and $stop eq "-v") {
+  $headings = 1;
+  $stop = shift;
+}
+
+unless ($stop) {
+  print "Usage: $0 [ -v ] STATION\n";
+  print "\n";
+  print "Examples: 'Lindholmspiren (Göteborg)' 'Lindholmen (Göteborg)'\n";
+  print "          'Brunnsparken (Göteborg)' 'Nordstan (Göteborg)'\n";
+  print "          'Södermalmsgatan (Göteborg)'\n";
+  exit;
+}
+
+print_stop($stop);
+
+sub print_stop {
+    my ($stop) = (@_);
+    # Url encode stop (assuming it is already utf-8)
+    # TODO: Check locale and convert to UTF-8 if necessary
+    $stop =~ s/[^\w\d ()-]/sprintf("%%%x", ord($&))/ge; # [\x{80}-\x{ff}]
+    $stop =~ tr/ /+/;
+    my $url = "http://wap.vasttrafik.se/QueryFormAsync.aspx?hpl=$stop&lang=sv";
+    my $format_str = "%6s %-29s%5s%7s\n";
+    if ($headings) {
+    	printf $format_str, "Line", "Destination", "Next (minutes)", "";
+    	printf $format_str, "----", "-----------", "--------------", "";
+    }
+    for $_ (`wget '$url' -q -O -`) {
+        s/&#(\d+);/chr($1)/eg; # unquote to unicode string
+        m!<td[^>]*>(?:<font[^>]*>)?([^<]*)(?:</font>)?</td>   # line number
+          <td[^>]*>(?:<font[^>]*>)?([^<]*)(?:</font>)?</td>   # destination
+          <td[^>]*>(?:<font[^>]*>)?([^<]*)(?:</font>)?</td>   # next
+          <td[^>]*>.*?</td>                                   # some image
+          <td[^>]*>(?:<font[^>]*>)?([^<]*)(?:</font>)?</td>   # thereafter
+          <td[^>]*>.*?</td>                                   # some image
+          !x or next;
+        print encode('UTF-8', sprintf "%6s %-29s%5s%7s\n", $1, $2, $3, $4);
+        #TODO: Convert to LOCALE charset
+    }
+}
