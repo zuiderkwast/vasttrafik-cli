@@ -4,7 +4,11 @@ vasttrafik-cli
 CLI program for listing Västtrafik departures
 
 ```sh
-$ vasttrafik 'Lindholmen (Göteborg)'
+$ vasttrafik "Lindholm<TAB><TAB>
+Lindholmen (Göteborg)             Lindholmsplatsen (Göteborg)
+Lindholmens vändplan (Strömstad)  Lindholmsvägen (Strömstad)
+Lindholmspiren (Göteborg)         
+$ vasttrafik "Lindholmen (Göteborg)"
     16 Eketrägatan                     Nu     10
     16 Eketrägatan                     16     --
     16 Högsbohöjd                       6     16
@@ -21,7 +25,21 @@ $ vasttrafik 'Lindholmen (Göteborg)'
    121 Torslanda                       18     50
 ```
 
+To enable tab completion in bash, source the file `vasttrafik-completion.bash`.
+
+```sh
+$ . vasttrafik-completion.bash
+```
+
+
 TODO
 ----
 
-* Tab completion of station names
+* Make the completion script search for the file `allstops` (containing the
+  complete list of stations) in predifined locations instead of requiring
+  it to be in the current directory
+* Don't escape spaces and other shell special characters if the common prefix
+  of all matches doesn't contain any such characters.
+* `make install` target
+* deb packege (possibly)
+* better instructions
